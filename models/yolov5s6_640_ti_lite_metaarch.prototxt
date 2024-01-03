@@ -1,0 +1,57 @@
+name: "yolo_v3"
+tidl_yolo {
+  name: "yolo_v3"
+  in_width: 640
+  in_height: 640
+ # 9,11,  21,19,  17,41,  43,32,  39,70,  86,64,  65,131,  134,130,  120,265,  282,180,  247,354,  512,387
+ yolo_param {
+    input: "370"
+    anchor_width: 9
+    anchor_width: 21
+    anchor_width: 17
+    anchor_height: 11
+    anchor_height: 19
+    anchor_height: 41
+  }
+ yolo_param {
+    input: "680"
+    anchor_width: 43
+    anchor_width: 39
+    anchor_width: 86
+    anchor_height: 32
+    anchor_height: 70
+    anchor_height: 64
+  }
+ yolo_param {
+    input: "990"
+    anchor_width: 65
+    anchor_width: 134
+    anchor_width: 120
+    anchor_height: 131
+    anchor_height: 130
+    anchor_height: 265
+  }
+ yolo_param {
+    input: "1300"
+    anchor_width: 282
+    anchor_width: 247
+    anchor_width: 512
+    anchor_height: 180
+    anchor_height: 354
+    anchor_height: 387
+  }
+
+  detection_output_param {
+    num_classes: 80
+    share_location: true
+    background_label_id: -1
+    nms_param {
+      nms_threshold: 0.65
+      top_k: 200
+    }
+    code_type: CODE_TYPE_YOLO_V5
+    keep_top_k: 200
+    confidence_threshold: 0.3
+  }
+  output: "detections"
+}
