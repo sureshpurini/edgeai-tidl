@@ -11,13 +11,13 @@ else :
 
 models_configs = {
     'east-mobilenet' : {
-        'model_path' : os.path.join(models_base_path, 'east_mobilenet_pretrained.onnx'),
+        'model_path' : os.path.join(models_base_path, 'east-mobilenet-opset11.onnx'),
         'session_name' : 'onnxrt' ,
         'num_images': numImages,
         'model_type': ""
     },
 	 'east-opset-11' : {
-        'model_path' : os.path.join(models_base_path, 'east-opset-11.onnx'),
+        'model_path' : os.path.join(models_base_path, 'east-vgg16-opset11.onnx'),
         'session_name' : 'onnxrt' ,
         'num_images': numImages,
         'model_type': ""
