@@ -1,0 +1,14 @@
+img_name,predicted,actual,levenshtein_accuracy
+test/3_1.png,MAKE,MAKE,1
+test/6_4.png,INCIA,India,0.8
+test/6_5.png,AVALL,Avail,0.8
+test/6_9.png,UNVERSTY,UNIVERSITY,0.8
+test/17_1.png,MIDDLE,Middle,1
+test/33_4.png,SIDE,side,1
+test/34_17.png,ABOUT,about,1
+test/34_21.png,SIGNBOARD,signboard,1
+test/37_3.png,MINUIE,minute,0.83
+test/37_13.png,NSURANCE,INSURANCE,0.89
+test/38_1.png,RECBNCCY,REGENCY,0.62
+test/40_1.png,NORARKNG,NOPARKING,0.78
+test/37_11.png,DLRECT,DIRECT,0.83
