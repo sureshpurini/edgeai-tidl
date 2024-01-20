@@ -10,6 +10,12 @@ else :
     numImages = 3
 
 models_configs = {
+    'fcnn' : {
+        'model_path' : os.path.join(models_base_path, 'fcn_v2.onnx'),
+        'session_name' : 'onnxrt' ,
+        'num_images': numImages,
+        'model_type': ""
+    },
     'east-mobilenet' : {
         'model_path' : os.path.join(models_base_path, 'east-mobilenet-opset11.onnx'),
         'session_name' : 'onnxrt' ,
