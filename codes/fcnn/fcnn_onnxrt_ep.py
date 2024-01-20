@@ -17,7 +17,7 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 from common_utils import *
 from model_configs import *
-from east_utils import resize_img, load_pil, get_boxes, adjust_ratio, plot_boxes
+from fcnn_utils import preprocess_image, decode_batch_predictions
 
 required_options = {
 "tidl_tools_path":tidl_tools_path,
@@ -28,22 +28,23 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-c','--compile', action='store_true', help='Run in Model compilation mode')
 parser.add_argument('-d','--disable_offload', action='store_true',  help='Disable offload to TIDL')
 parser.add_argument('-z','--run_model_zoo', action='store_true',  help='Run model zoo models')
+parser.add_argument('-model_path', type=str, help='Path of the ONNX model', required=True)
+parser.add_argument('-calib_images_path', type=str, help='Path of the directory containing calibration images')
+parser.add_argument('-test_images_path', type=str, help='Path of the directory containing test images')
+
 args = parser.parse_args()
 os.environ["TIDL_RT_PERFSTATS"] = "1"
-os.environ["TIDL_RT_DDR_STATS"] = "1"
+os.environ["TIDL_DDR_PERFSTATS"] = "1"
 
 so = rt.SessionOptions()
+# so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_DISABLE_ALL
 
 print("Available execution providers : ", rt.get_available_providers())
 
-calib_images = ['../../../test_data/airshow.jpg',
-                '../../../test_data/ADE_val_00001801.jpg']
-class_test_images = ['../../../test_data/airshow.jpg']
-od_test_images    = ['../../../test_data/ADE_val_00001801.jpg']
-seg_test_images   = ['../../../test_data/ADE_val_00001801.jpg']
-
-calib_images = ['../../../img_1.jpg','../../../img_2.jpg','../../../img_3.jpg']
-
+# calib_images = ['../../../ICDAR/img_1.jpg','../../../ICDAR/img_2.jpg','../../../ICDAR/img_3.jpg']
+calib_images = ['iiit5k/IIIT5K/test/4_1.png','iiit5k/IIIT5K/test/4_3.png','iiit5k/IIIT5K/test/4_4.png','iiit5k/IIIT5K/test/4_5.png']
+if args.calib_images_path:
+    calib_images = [os.path.join(args.calib_images_path, f) for f in os.listdir(args.calib_images_path) if os.path.isfile(os.path.join(args.calib_images_path, f))]
 sem = multiprocessing.Semaphore(0)
 if platform.machine() == 'aarch64':
     ncpus = 1
@@ -70,44 +71,24 @@ if(SOC == "am62"):
     args.disable_offload = True
     args.compile = False
 
-# def get_benchmark_output(interpreter):
-#     benchmark_dict = interpreter.get_TI_benchmark_data()
-#     proc_time = copy_time = 0
-#     cp_in_time = cp_out_time = 0
-#     subgraphIds = []
-#     for stat in benchmark_dict.keys():
-#         if 'proc_start' in stat:
-#             value = stat.split("ts:subgraph_")
-#             value = value[1].split("_proc_start")
-#             subgraphIds.append(value[0])
-#     for i in range(len(subgraphIds)):
-#         proc_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_proc_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_proc_start']
-#         cp_in_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_in_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_in_start']
-#         cp_out_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_out_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_out_start']
-#         copy_time += cp_in_time + cp_out_time
-#     copy_time = copy_time if len(subgraphIds) == 1 else 0
-#     totaltime = benchmark_dict['ts:run_end'] -  benchmark_dict['ts:run_start']
-#     return copy_time, proc_time, totaltime
-def get_benchmark_output(benchmark_dict):
+def get_benchmark_output(interpreter):
+    benchmark_dict = interpreter.get_TI_benchmark_data()
     proc_time = copy_time = 0
     cp_in_time = cp_out_time = 0
     subgraphIds = []
     for stat in benchmark_dict.keys():
         if 'proc_start' in stat:
-            subgraphIds.append(stat.replace('ts:subgraph_', '').replace('_proc_start', ''))
+            value = stat.split("ts:subgraph_")
+            value = value[1].split("_proc_start")
+            subgraphIds.append(value[0])
     for i in range(len(subgraphIds)):
         proc_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_proc_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_proc_start']
         cp_in_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_in_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_in_start']
         cp_out_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_out_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_out_start']
-    copy_time = cp_in_time + cp_out_time
+        copy_time += cp_in_time + cp_out_time
     copy_time = copy_time if len(subgraphIds) == 1 else 0
-    total_time   = benchmark_dict['ts:run_end'] - benchmark_dict['ts:run_start']
-    read_total  = benchmark_dict['ddr:read_end'] - benchmark_dict['ddr:read_start']
-    write_total   = benchmark_dict['ddr:write_end'] - benchmark_dict['ddr:write_start']
-
-    total_time = total_time - copy_time
-
-    return total_time/1000000, proc_time/1000000, read_total/1000000, write_total/1000000
+    totaltime = benchmark_dict['ts:run_end'] -  benchmark_dict['ts:run_start']
+    return copy_time, proc_time, totaltime
 
 
 def infer_image(sess, image_files, config):
@@ -160,6 +141,8 @@ def run_model(model, mIdx):
     
     #set input images for demo
     config = models_configs[model]
+    if args.model_path:
+        config['model_path'] = args.model_path
     if config['model_type'] == 'classification':
         test_images = class_test_images
     elif config['model_type'] == 'od':
@@ -167,10 +150,14 @@ def run_model(model, mIdx):
     elif config['model_type'] == 'seg':
         test_images = seg_test_images
     else:
-        test_images = ['ICDAR/img_'+str(i+1)+'.jpg' for i in range(103)]
-	#test_images = ['../../../img_2.jpg']
+        base_path = 'iiit5k/IIIT5K/test/'
+        list_of_images =["3_1", "6_4","6_5","6_9","17_1","33_4","34_17","34_21","37_3","37_13","38_1","40_1","37_11"]
+        test_images = [base_path+i+'.png' for i in list_of_images ]
+        if args.test_images_path:
+            test_images= [os.path.join(args.test_images_path, f) for f in os.listdir(args.test_images_path) if os.path.isfile(os.path.join(args.test_images_path, f))]
+        # test_images = [base_path+str(i+1)+'.jpg' for i in range(102) ]
     print(test_images)
-    print(len(test_images))
+    # exit(0)
     delegate_options = {}
     delegate_options.update(required_options)
     delegate_options.update(optional_options)   
@@ -178,12 +165,13 @@ def run_model(model, mIdx):
 
     # stripping off the ss-ort- from model namne
     delegate_options['artifacts_folder'] = delegate_options['artifacts_folder'] + '/' + model + '/' #+ 'tempDir/' 
-    delegate_options['debug_level'] = 0
+    delegate_options['debug_level'] = 20
     if config['model_type'] == 'od':
         delegate_options['object_detection:meta_layers_names_list'] = config['meta_layers_names_list'] if ('meta_layers_names_list' in config) else ''
         delegate_options['object_detection:meta_arch_type'] = config['meta_arch_type'] if ('meta_arch_type' in config) else -1
 
-    # delegate_options['deny_list'] = "Concat"
+    # delegate_options['deny_list'] = "Shape, Concat, Slice, Cast, Gather, Transpose, MatMul, Add, Reshape"
+    # delegate_options['deny_list'] = "Shape, Reshape, Cast, Gather"
     # delete the contents of this folder
     if args.compile or args.disable_offload:
         os.makedirs(delegate_options['artifacts_folder'], exist_ok=True)
@@ -200,6 +188,7 @@ def run_model(model, mIdx):
     else:
         input_image = test_images
     
+    
     numFrames = config['num_images']
     if(args.compile):
         if numFrames > delegate_options['advanced_options:calibration_frames']:
@@ -208,6 +197,7 @@ def run_model(model, mIdx):
     if(model == 'cl-ort-resnet18-v1_4batch'):
         delegate_options['advanced_options:inference_mode'] = 1
         delegate_options['advanced_options:num_cores'] = 4
+    # so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
     
     ############   set interpreter  ################################
     if args.disable_offload : 
@@ -215,51 +205,33 @@ def run_model(model, mIdx):
         sess = rt.InferenceSession(config['model_path'] , providers=EP_list,sess_options=so)
     elif args.compile:
         EP_list = ['TIDLCompilationProvider','CPUExecutionProvider']
+        # try:
         sess = rt.InferenceSession(config['model_path'] ,providers=EP_list, provider_options=[delegate_options, {}], sess_options=so)
+        # except Exception as e:
+            # print(e)
     else:
         EP_list = ['TIDLExecutionProvider','CPUExecutionProvider']
         sess = rt.InferenceSession(config['model_path'] ,providers=EP_list, provider_options=[delegate_options, {}], sess_options=so)
     ################################################################
-    
+
     # run session
     print(numFrames, "are the number of iterations to be run")
     for i in range(numFrames):
-        #img, output, proc_time, sub_graph_time = infer_image(sess, input_image[i%len(input_image)], config)
-        start_index = i%len(input_image)
-        input_details = sess.get_inputs()
-        # print(input_details[0].type)
-        floating_model = (input_details[0].type == 'tensor(float)')
-        # print("FLOATING MODEL",bool(floating_model))
-        batch = input_details[0].shape[0]
-        # print(batch)
-        img = Image.open(test_images[i])
-        # You may need the resize_img function from your original code
-        img, ratio_h, ratio_w = resize_img(img)
-        img_tensor = load_pil(img)
-        print("IMAGE SHAPE TENSOR",np.shape(img_tensor))
-        img_tensor=img_tensor.numpy()
-        if floating_model:
-            input_data = np.float32(img_tensor)
-        else:
-            input_data = np.uint8(img_tensor)
-        ort_inputs = {sess.get_inputs()[0].name: input_data}
-        ort_outputs = sess.run(None, ort_inputs)
+        image=input_image[i%len(input_image)]
+        print(image)
+        img = preprocess_image(image, img_size=(128, 32))
+        test_img = np.expand_dims(img, axis=0).astype(np.float32)
+        print(np.shape(test_img))
+        print(sess.get_inputs()[0].shape)
+        sess.get_inputs()[0].type
+        input_name = sess.get_inputs()[0].name
+        output_name = sess.get_outputs()[0].name
+        # prediction
+        preds = sess.run([output_name], {input_name: test_img})
+        pred_texts = decode_batch_predictions(preds[0])
+        print(pred_texts)
 
-    score = ort_outputs[0]
-    geo = ort_outputs[1]
-    boxes = get_boxes(score.squeeze(0), geo.squeeze(0))
-    adjusted_boxes = adjust_ratio(boxes, ratio_w, ratio_h)
-
-    # Visualize and save the results
-    result_img = plot_boxes(img, adjusted_boxes)
-    result_img.show()
-    result_img.save(f"result-{model}.jpg")
-    stats = sess.get_TI_benchmark_data()
-    tt, st, rb, wb = get_benchmark_output(stats)
-    print(stats)
-    print(f'Statistics : \n Inferences Per Second   : {1000.0/tt :7.2f} fps')
-    print(f'Total Inference Time Per Image : {tt :7.2f} ms  \n DDR BW Per Image        : {rb+ wb : 7.2f} MB')
- 
+    
     if ncpus > 1:
         sem.release()
 
@@ -267,7 +239,7 @@ def run_model(model, mIdx):
 #models = models_configs.keys()
 
 #models = ['cl-ort-resnet18-v1', 'cl-ort-caffe_squeezenet_v1_1', 'ss-ort-deeplabv3lite_mobilenetv2', 'od-ort-ssd-lite_mobilenetv2_fpn']
-models = ['east-opset-11']
+models = ['fcnn']
 if(SOC == "am69a"):
     models.append('cl-ort-resnet18-v1_4batch')
 

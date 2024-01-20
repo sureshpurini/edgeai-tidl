@@ -28,6 +28,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-c','--compile', action='store_true', help='Run in Model compilation mode')
 parser.add_argument('-d','--disable_offload', action='store_true',  help='Disable offload to TIDL')
 parser.add_argument('-z','--run_model_zoo', action='store_true',  help='Run model zoo models')
+parser.add_argument('-model_path', type=str, help='Path of the ONNX model', required=True)
+parser.add_argument('-calib_images_path', type=str, help='Path of the directory containing calibration images')
+parser.add_argument('-test_images_path', type=str, help='Path of the directory containing test images')
+
 args = parser.parse_args()
 os.environ["TIDL_RT_PERFSTATS"] = "1"
 os.environ["TIDL_RT_DDR_STATS"] = "1"
@@ -36,13 +40,15 @@ so = rt.SessionOptions()
 
 print("Available execution providers : ", rt.get_available_providers())
 
-calib_images = ['../../../test_data/airshow.jpg',
-                '../../../test_data/ADE_val_00001801.jpg']
-class_test_images = ['../../../test_data/airshow.jpg']
-od_test_images    = ['../../../test_data/ADE_val_00001801.jpg']
-seg_test_images   = ['../../../test_data/ADE_val_00001801.jpg']
+# calib_images = ['../../../test_data/airshow.jpg',
+#                 '../../../test_data/ADE_val_00001801.jpg']
+# class_test_images = ['../../../test_data/airshow.jpg']
+# od_test_images    = ['../../../test_data/ADE_val_00001801.jpg']
+# seg_test_images   = ['../../../test_data/ADE_val_00001801.jpg']
 
 calib_images = ['../../../img_1.jpg','../../../img_2.jpg','../../../img_3.jpg']
+if args.calib_images_path:
+    calib_images = [os.path.join(args.calib_images_path, f) for f in os.listdir(args.calib_images_path) if os.path.isfile(os.path.join(args.calib_images_path, f))]
 
 sem = multiprocessing.Semaphore(0)
 if platform.machine() == 'aarch64':
@@ -70,24 +76,6 @@ if(SOC == "am62"):
     args.disable_offload = True
     args.compile = False
 
-# def get_benchmark_output(interpreter):
-#     benchmark_dict = interpreter.get_TI_benchmark_data()
-#     proc_time = copy_time = 0
-#     cp_in_time = cp_out_time = 0
-#     subgraphIds = []
-#     for stat in benchmark_dict.keys():
-#         if 'proc_start' in stat:
-#             value = stat.split("ts:subgraph_")
-#             value = value[1].split("_proc_start")
-#             subgraphIds.append(value[0])
-#     for i in range(len(subgraphIds)):
-#         proc_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_proc_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_proc_start']
-#         cp_in_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_in_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_in_start']
-#         cp_out_time += benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_out_end'] - benchmark_dict['ts:subgraph_'+str(subgraphIds[i])+'_copy_out_start']
-#         copy_time += cp_in_time + cp_out_time
-#     copy_time = copy_time if len(subgraphIds) == 1 else 0
-#     totaltime = benchmark_dict['ts:run_end'] -  benchmark_dict['ts:run_start']
-#     return copy_time, proc_time, totaltime
 def get_benchmark_output(benchmark_dict):
     proc_time = copy_time = 0
     cp_in_time = cp_out_time = 0
@@ -160,6 +148,8 @@ def run_model(model, mIdx):
     
     #set input images for demo
     config = models_configs[model]
+    if args.model_path:
+        config['model_path'] = args.model_path
     if config['model_type'] == 'classification':
         test_images = class_test_images
     elif config['model_type'] == 'od':
@@ -167,7 +157,9 @@ def run_model(model, mIdx):
     elif config['model_type'] == 'seg':
         test_images = seg_test_images
     else:
-        test_images = ['ICDAR/img_4.jpg','ICDAR/img_5.jpg','ICDAR/img_6.jpg','ICDAR/img_7.jpg','ICDAR/img_8.jpg','ICDAR/img_9.jpg','ICDAR/img_10.jpg','ICDAR/img_11.jpg','ICDAR/img_12.jpg','ICDAR/img_16.jpg']
+        test_images = ['ICDAR/img_'+str(i+1)+'.jpg' for i in range(103)]
+        if args.test_images_path:
+            test_images= [os.path.join(args.test_images_path, f) for f in os.listdir(args.test_images_path) if os.path.isfile(os.path.join(args.test_images_path, f))]
 	#test_images = ['../../../img_2.jpg']
     print(test_images)
     print(len(test_images))
@@ -178,7 +170,7 @@ def run_model(model, mIdx):
 
     # stripping off the ss-ort- from model namne
     delegate_options['artifacts_folder'] = delegate_options['artifacts_folder'] + '/' + model + '/' #+ 'tempDir/' 
-    delegate_options['debug_level'] = 3
+    delegate_options['debug_level'] = 0
     if config['model_type'] == 'od':
         delegate_options['object_detection:meta_layers_names_list'] = config['meta_layers_names_list'] if ('meta_layers_names_list' in config) else ''
         delegate_options['object_detection:meta_arch_type'] = config['meta_arch_type'] if ('meta_arch_type' in config) else -1
@@ -232,8 +224,7 @@ def run_model(model, mIdx):
         # print("FLOATING MODEL",bool(floating_model))
         batch = input_details[0].shape[0]
         # print(batch)
-        img_path = test_images[i%len(test_images)]
-        img = Image.open(img_path)
+        img = Image.open(test_images[i])
         # You may need the resize_img function from your original code
         img, ratio_h, ratio_w = resize_img(img)
         img_tensor = load_pil(img)
@@ -246,15 +237,15 @@ def run_model(model, mIdx):
         ort_inputs = {sess.get_inputs()[0].name: input_data}
         ort_outputs = sess.run(None, ort_inputs)
 
-        score = ort_outputs[0]
-        geo = ort_outputs[1]
-        boxes = get_boxes(score.squeeze(0), geo.squeeze(0))
-        adjusted_boxes = adjust_ratio(boxes, ratio_w, ratio_h)
+    score = ort_outputs[0]
+    geo = ort_outputs[1]
+    boxes = get_boxes(score.squeeze(0), geo.squeeze(0))
+    adjusted_boxes = adjust_ratio(boxes, ratio_w, ratio_h)
 
-        # Visualize and save the results
-        result_img = plot_boxes(img, adjusted_boxes)
-        result_img.show()
-        result_img.save(f"result-{model}-{img_path.split('/')[-1]}")
+    # Visualize and save the results
+    result_img = plot_boxes(img, adjusted_boxes)
+    result_img.show()
+    result_img.save(f"result-{model}.jpg")
     stats = sess.get_TI_benchmark_data()
     tt, st, rb, wb = get_benchmark_output(stats)
     print(stats)
@@ -268,7 +259,7 @@ def run_model(model, mIdx):
 #models = models_configs.keys()
 
 #models = ['cl-ort-resnet18-v1', 'cl-ort-caffe_squeezenet_v1_1', 'ss-ort-deeplabv3lite_mobilenetv2', 'od-ort-ssd-lite_mobilenetv2_fpn']
-models = ['east-mobilenet']
+models = ['east-opset-11']
 if(SOC == "am69a"):
     models.append('cl-ort-resnet18-v1_4batch')
 
