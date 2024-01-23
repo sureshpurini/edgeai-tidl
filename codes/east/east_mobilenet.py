@@ -177,7 +177,7 @@ def run_model(model, mIdx):
         delegate_options['object_detection:meta_layers_names_list'] = config['meta_layers_names_list'] if ('meta_layers_names_list' in config) else ''
         delegate_options['object_detection:meta_arch_type'] = config['meta_arch_type'] if ('meta_arch_type' in config) else -1
 
-    # delegate_options['deny_list'] = "Concat"
+    delegate_options['deny_list'] = "Div"
     # delete the contents of this folder
     if args.compile or args.disable_offload:
         os.makedirs(delegate_options['artifacts_folder'], exist_ok=True)
