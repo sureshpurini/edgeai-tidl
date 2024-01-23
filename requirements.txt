@@ -1,0 +1,3 @@
+tensorflow==2.15.0
+lanms
+scipy==1.11.4
