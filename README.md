@@ -11,10 +11,14 @@ This repository is divided into three directories:
 
 Please add the files in the models and codes directory as specified below:
 - Clone the edgeai-tidl-tools repository from the texas instruments repository [https://github.com/TexasInstruments/edgeai-tidl-tools.git]
-- To create the docker container first build the docker image using the Dockerfile and then create the container keeping the edgeai-tidl-tools directory as the mount point:
+- To create the docker container first build the docker image using the Dockerfile and then create the container keeping the edgeai-tidl-tools directory as the mount point[https://github.com/TexasInstruments/edgeai-tidl-tools/blob/master/docs/advanced_setup.md#docker-based-setup-for-x86_pc]:
 ```
    sudo docker build -f Dockerfile -t x86_ubuntu_22 .
    sudo docker run -name <container_name> -it --shm-size=4096m --mount source=/path/to/edgeai-tidl-tools,target=/home/root,type=bind x86_ubuntu_22
+   sudo docker exec -it <container_name> bash
+   cd /home/root
+   export SOC=am68pa
+   source ./setup.sh
 
 ```
 
