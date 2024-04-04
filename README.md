@@ -31,3 +31,21 @@ Please add the files in the models and codes directory as specified below:
     ~/edgeai-tidl-tools/osrt_python/ort$ python3 east_mobilenet.py -c #Compilation mode on host pc
     ~/edgeai-tidl-tools/osrt_python/ort$ python3 east_mobilenet.py #heterogeneous execution
 ```
+
+## Model config and instructions for fcnn:
+```
+'fcnn-final' : {
+        'model_path' : os.path.join(models_base_path, 'simplified_fcn.onnx'),
+        'session_name' : 'onnxrt' ,
+        'num_images': numImages,
+        'model_type': "",
+        'meta_arch_type' : 6
+    },
+```
+
+### Run instructions:
+1. To run in ARM mode simply use `python3 fcnn_batch_inference.py -d`
+2. For compiling, please use the alternate script `python3 fcnn_compile.py -c`. This will create artifacts that can be used for the inference script in heterogeneous execution.
+3. Post that, the same artifacts can be used to run it in hetereogenous execution: `python3 fcnn_batch_inference.py` 
+
+NOTE: Currently, the compilation allows batch sizes upto 8. This can be configured by changing the input shape while compiling the model(`fcnn_compile.py`).
