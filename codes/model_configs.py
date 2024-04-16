@@ -10,6 +10,52 @@ else :
     numImages = 3
 
 models_configs = {
+    'yolov5s6_icdar' : {
+        'model_path' : os.path.join(models_base_path, 'yolov5s6_640_icdar.onnx'),
+        'mean': [0, 0, 0],
+        'scale' : [0.003921568627,0.003921568627,0.003921568627],
+        'num_images' : numImages,
+        'num_classes': 1,
+        'model_type': 'od',
+        'od_type' : 'YoloV5',
+        'framework' : '',
+        'meta_layers_names_list' : os.path.join(models_base_path, 'yolov5s6_640_icdar.prototxt'),
+        'session_name' : 'onnxrt' ,
+        'meta_arch_type' : 6
+    },
+    'yolo-448-no-normalize' : {
+        'model_path' : os.path.join(models_base_path, 'yolov5s_dfg_no_normalize_448.onnx'),
+        'mean': [0, 0, 0],
+        'scale' : [0.003921568627,0.003921568627,0.003921568627],
+        'num_images' : numImages,
+        'num_classes': 1,
+        'model_type': 'od',
+        'od_type' : 'YoloV5',
+        'framework' : '',
+        'meta_layers_names_list' : os.path.join(models_base_path, 'yolov5s_dfg_no_normalize_448.prototxt'),
+        'session_name' : 'onnxrt' ,
+        'meta_arch_type' : 6
+    },
+    'fcnn-final' : {
+        'model_path' : os.path.join(models_base_path, 'simplified_fcn.onnx'),
+        'session_name' : 'onnxrt' ,
+        'num_images': numImages,
+        'model_type': "",
+        'meta_arch_type' : 6
+    },
+    'yolov5s6_dfg_no_normalize' : {
+        'model_path' : os.path.join(models_base_path, 'yolov5s_dfg_no_normalize.onnx'),
+        'mean': [0, 0, 0],
+        'scale' : [0.003921568627,0.003921568627,0.003921568627],
+        'num_images' : numImages,
+        'num_classes': 1,
+        'model_type': 'od',
+        'od_type' : 'YoloV5',
+        'framework' : '',
+        'meta_layers_names_list' : os.path.join(models_base_path, 'yolov5s_dfg_no_normalize.prototxt'),
+        'session_name' : 'onnxrt' ,
+        'meta_arch_type' : 6
+    },
     'fcnn' : {
         'model_path' : os.path.join(models_base_path, 'fcn_v2.onnx'),
         'session_name' : 'onnxrt' ,

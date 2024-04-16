@@ -1,0 +1,29 @@
+------Layer #(Type) [Exec ID , Data ID] --[Ni x inW x inH] => [No x outW x outH] [Ni/G] [dataflowType] [preFetch, preFetchAlign, firstTransferRemainder, procSize, inPlaneSize] [dmaFreq] [dmaFreqWt] [kernelFreq] [In Data Ids] -----
+------  1(DataConvert) [1, 1] --[256 x 25 x  4] => [256 x 25 x  4] *** [256] ***[ COL] ***[0, 0, 0, 400, 400]**** [1], [1],[1] -[0 ]---
+  IN: DDR, DMA,    190(   400),    190(   400),  100(  256),  19400( 103424),   0,        0 ||||  L2, DMA,    1c2(   450),    1c2(   450),  100(  256),  1c280( 115328),   0,        0 
+ OUT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff ||||MSMC, CPU,     c0(   192),     9d(   157),  100(  256),   c080(  49280),  1b,   2600e5 
+  WT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff ||||NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+ STG:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+CONT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+Padding Info [Row, Col]: Actual  IN -> OUT : [ 0,  0] -> [ 1,  1], Required OUT : [ 1,  1],  To fill zero OUT: [ 1,  1]
+------  2(    Conv) [2, 2] --[256 x 25 x  4] => [512 x 25 x  4] *** [256] ***[ROW_L] ***[54, 64, 64, 93, 157]**** [1], [8],[8] -[1 ]---
+  IN:MSMC, DMA,     c0(   192),     9d(   157),  100(  256),   c080(  49280),   0,   2600e5 ||||  L2, DMA,     c0(   192),     c0(   192),  100(  256),   c000(  49152),   0,        0 
+ OUT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff ||||MSMC, CPU,     c0(   192),     9d(   157),  200(  512),  18080(  98432),  1b,       65 
+  WT:DDR_PERSIST, DMA,    901(  2305),    901(  2305),  200(  512), 120200(1180160),   0,        0 ||||  L2, DMA,    940(  2368),    901(  2305),   80(  128),  4a000( 303104),   0,     c000 
+ STG:MSMC, DMA_ONCE,    940(  2368),    901(  2305),  200(  512), 128000(1212416),   0,   4c0100 
+CONT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+Padding Info [Row, Col]: Actual  IN -> OUT : [ 1,  1] -> [ 1,  1], Required OUT : [ 1,  1],  To fill zero OUT: [ 1,  0]
+------  3(    Conv) [3, 3] --[512 x 25 x  4] => [512 x 25 x  4] *** [512] ***[ROW_L] ***[54, 64, 64, 93, 157]**** [1], [16],[16] -[2 ]---
+  IN:MSMC, DMA,     c0(   192),     9d(   157),  200(  512),  18080(  98432),   0,       65 ||||  L2, DMA,     c0(   192),     c0(   192),  200(  512),  18000(  98304),   0,        0 
+ OUT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff ||||MSMC, CPU,     c0(   192),     9d(   157),  200(  512),  18080(  98432),  1b,   2600e5 
+  WT:DDR_PERSIST, DMA,   1201(  4609),   1201(  4609),  200(  512), 240200(2359808),   0,   120200 ||||  L2, DMA,   1240(  4672),   1201(  4609),   40(   64),  49000( 299008),   0,    18000 
+ STG:MSMC, DMA_ONCE,   1240(  4672),   1201(  4609),  200(  512), 248000(2392064),   0,   278100 
+CONT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+Padding Info [Row, Col]: Actual  IN -> OUT : [ 1,  1] -> [ 1,  1], Required OUT : [ 0,  1],  To fill zero OUT: [ 0,  0]
+------  4(DataConvert) [4, 4] --[512 x 25 x  4] => [512 x 25 x  4] *** [512] ***[ COL] ***[0, 0, 0, 104, 104]**** [1], [1],[1] -[3 ]---
+  IN:MSMC, DMA,     c0(   192),     9d(   157),  200(  512),  18080(  98432),  1b,   2600e5 ||||  L2, DMA,     d0(   208),     d0(   208),  200(  512),  1a000( 106496),   0,        0 
+ OUT:MSMC, CPU,    190(   400),    190(   400),  200(  512),  32000( 204800),   0,        0 |||| DDR, DMA,    190(   400),    190(   400),  200(  512),  32400( 205824),   0,        0 
+  WT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff ||||NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+ STG:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+CONT:NONE,  NA,      0(     0),      0(     0),    0(    0),      0(      0),   0, ffffffff 
+Padding Info [Row, Col]: Actual  IN -> OUT : [ 1,  1] -> [ 0,  0], Required OUT : [ 0,  0],  To fill zero OUT: [ 0,  0]

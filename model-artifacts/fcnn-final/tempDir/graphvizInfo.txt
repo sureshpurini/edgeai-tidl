@@ -1,0 +1,23 @@
+22
+0 /cnn/cnn.0/conv/Conv Conv outputAdjNodes 1 1 inputAdjNodes 0 input additionalOutput 0 diagInfo 
+1 /cnn/cnn.0/relu/Relu Relu outputAdjNodes 1 2 inputAdjNodes 1 0 additionalOutput 0 diagInfo 
+2 /cnn/cnn.1/MaxPool MaxPool outputAdjNodes 1 3 inputAdjNodes 1 1 additionalOutput 0 diagInfo 
+3 /cnn/cnn.2/conv/Conv Conv outputAdjNodes 1 4 inputAdjNodes 1 2 additionalOutput 0 diagInfo 
+4 /cnn/cnn.2/relu/Relu Relu outputAdjNodes 1 5 inputAdjNodes 1 3 additionalOutput 0 diagInfo 
+5 /cnn/cnn.3/MaxPool MaxPool outputAdjNodes 1 6 inputAdjNodes 1 4 additionalOutput 0 diagInfo 
+6 /cnn/cnn.4/conv/Conv Conv outputAdjNodes 1 7 inputAdjNodes 1 5 additionalOutput 0 diagInfo 
+7 /cnn/cnn.4/relu/Relu Relu outputAdjNodes 1 8 inputAdjNodes 1 6 additionalOutput 0 diagInfo 
+8 /cnn/cnn.5/conv/Conv Conv outputAdjNodes 1 9 inputAdjNodes 1 7 additionalOutput 0 diagInfo 
+9 /cnn/cnn.5/relu/Relu Relu outputAdjNodes 1 10 inputAdjNodes 1 8 additionalOutput 0 diagInfo 
+10 /cnn/cnn.6/MaxPool MaxPool outputAdjNodes 1 11 inputAdjNodes 1 9 additionalOutput 0 diagInfo TIDL ALLOWLISTING LAYER CHECK -- TIDL_PoolingLayer '': kernel size 2x1 with stride 2x1 not supported
+11 /cnn/cnn.7/conv/Conv Conv outputAdjNodes 1 12 inputAdjNodes 1 10 additionalOutput 0 diagInfo 
+12 /cnn/cnn.7/relu/Relu Relu outputAdjNodes 1 13 inputAdjNodes 1 11 additionalOutput 0 diagInfo 
+13 /cnn/cnn.8/conv/Conv Conv outputAdjNodes 1 14 inputAdjNodes 1 12 additionalOutput 0 diagInfo 
+14 /cnn/cnn.8/relu/Relu Relu outputAdjNodes 1 15 inputAdjNodes 1 13 additionalOutput 0 diagInfo 
+15 /cnn/cnn.9/MaxPool MaxPool outputAdjNodes 1 16 inputAdjNodes 1 14 additionalOutput 0 diagInfo TIDL ALLOWLISTING LAYER CHECK -- TIDL_PoolingLayer '': kernel size 2x1 with stride 2x1 not supported
+16 /cnn/cnn.10/conv/Conv Conv outputAdjNodes 1 17 inputAdjNodes 1 15 additionalOutput 0 diagInfo 
+17 /cnn/cnn.10/relu/Relu Relu outputAdjNodes 1 18 inputAdjNodes 1 16 additionalOutput 0 diagInfo 
+18 /Reshape Reshape outputAdjNodes 1 19 inputAdjNodes 1 17 additionalOutput 0 diagInfo 
+19 /Transpose Transpose outputAdjNodes 1 20 inputAdjNodes 1 18 additionalOutput 0 diagInfo 
+20 /dense/MatMul MatMul outputAdjNodes 1 21 inputAdjNodes 1 19 additionalOutput 0 diagInfo Layer type not supported by TIDL --- layer type - MatMul,  Node name -/dense/MatMul
+21 /dense/Add Add outputAdjNodes 0 output inputAdjNodes 1 20 additionalOutput 0 diagInfo ALLOWLISTING : ADD/MUL/SUB layer : The variable inputs of layer must have 4 dimensions  --  file info - tidl_import_common_model_check.cpp , TIDL_checkAddMulSubDivTensorProperties , 281

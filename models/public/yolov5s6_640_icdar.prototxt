@@ -1,0 +1,55 @@
+name: "yolo_v3"
+tidl_yolo {
+  yolo_param {
+    input: "370"
+    anchor_width: 5.0078125
+    anchor_width: 12.171875
+    anchor_width: 10.3125
+    anchor_height: 7.4414062
+    anchor_height: 10.9375
+    anchor_height: 24.28125
+  }
+  yolo_param {
+    input: "432"
+    anchor_width: 25.125
+    anchor_width: 21.171875
+    anchor_width: 45.71875
+    anchor_height: 18.703125
+    anchor_height: 39.78125
+    anchor_height: 31.953125
+  }
+  yolo_param {
+    input: "494"
+    anchor_width: 32.90625
+    anchor_width: 68.625
+    anchor_width: 69.5625
+    anchor_height: 73.8125
+    anchor_height: 60.625
+    anchor_height: 119.4375
+  }
+  yolo_param {
+    input: "556"
+    anchor_width: 146.75
+    anchor_width: 126.0625
+    anchor_width: 292.0
+    anchor_height: 96.125
+    anchor_height: 195.75
+    anchor_height: 224.375
+  }
+  detection_output_param {
+    num_classes: 1
+    share_location: true
+    background_label_id: -1
+    nms_param {
+      nms_threshold: 0.65
+      top_k: 30000
+    }
+    code_type: CODE_TYPE_YOLO_V5
+    keep_top_k: 300
+    confidence_threshold: 0.005
+  }
+  name: "yolo_v3"
+  in_width: 640
+  in_height: 640
+  output: "detections"
+}

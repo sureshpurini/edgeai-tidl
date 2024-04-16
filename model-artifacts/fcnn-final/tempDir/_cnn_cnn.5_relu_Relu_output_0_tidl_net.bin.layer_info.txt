@@ -1,0 +1,10 @@
+0 0 input 
+1 1 input_netFormat 
+2 2 /cnn/cnn.0/relu/Relu_output_0 
+3 3 /cnn/cnn.1/MaxPool_output_0 
+4 4 /cnn/cnn.2/relu/Relu_output_0 
+5 5 /cnn/cnn.3/MaxPool_output_0 
+6 6 /cnn/cnn.4/relu/Relu_output_0 
+7 7 /cnn/cnn.5/relu/Relu_output_0_netFormat 
+8 8 /cnn/cnn.5/relu/Relu_output_0 
+9 0 input 

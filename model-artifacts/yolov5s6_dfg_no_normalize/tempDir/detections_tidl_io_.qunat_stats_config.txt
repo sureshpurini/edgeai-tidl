@@ -1,0 +1,13 @@
+inFileFormat    = 1
+numFrames   = 3
+postProcType   = 0
+postProcDataId   = 0
+quantRangeUpdateFactor   = -1.000000
+inData   = /home/root/model-artifacts/yolov5s6_dfg_no_normalize/tempDir/detections_calib_raw_data.bin
+outData   = "/home/root/model-artifacts/yolov5s6_dfg_no_normalize/tempDir/detections_tidl_io__stats_tool_out.bin"
+netBinFile     = /home/root/model-artifacts/yolov5s6_dfg_no_normalize/tempDir/detections_tidl_net.bin
+ioConfigFile        = /home/root/model-artifacts/yolov5s6_dfg_no_normalize/tempDir/detections_tidl_io_1.bin
+flowCtrl               = 35
+writeTraceLevel        = 0
+debugTraceLevel        = 0
+traceDumpBaseName        = "/home/root/model-artifacts/yolov5s6_dfg_no_normalize/tempDir/detections_tidl_io_

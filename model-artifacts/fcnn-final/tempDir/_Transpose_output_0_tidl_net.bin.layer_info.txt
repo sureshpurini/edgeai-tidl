@@ -1,0 +1,7 @@
+0 0 /cnn/cnn.9/MaxPool_output_0 
+1 1 /cnn/cnn.9/MaxPool_output_0_netFormat 
+2 2 /cnn/cnn.10/relu/Relu_output_0_netFormat 
+3 3 /Reshape_output_08 
+4 4 /Reshape_output_0 
+5 5 /Transpose_output_0 
+6 0 /cnn/cnn.9/MaxPool_output_0 

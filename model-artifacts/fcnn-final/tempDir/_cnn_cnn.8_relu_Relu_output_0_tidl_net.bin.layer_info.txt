@@ -1,0 +1,6 @@
+0 0 /cnn/cnn.6/MaxPool_output_0 
+1 1 /cnn/cnn.6/MaxPool_output_0_netFormat 
+2 2 /cnn/cnn.7/relu/Relu_output_0 
+3 3 /cnn/cnn.8/relu/Relu_output_0_netFormat 
+4 4 /cnn/cnn.8/relu/Relu_output_0 
+5 0 /cnn/cnn.6/MaxPool_output_0 
