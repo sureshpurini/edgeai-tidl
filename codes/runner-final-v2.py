@@ -220,14 +220,14 @@ def initialize_yolo_text():
 
 def run_yolo(sess, image, floating_model, shape, yolo_input_name):
     if shape[3]!= 640:
-        image = cv2.resize(image, (640, 640), interpolation=args.interpolation)
+        image_640 = cv2.resize(image, (640, 640), interpolation=args.interpolation)
     img_resized = cv2.resize(image, (shape[3], shape[2]), interpolation=args.interpolation)
     img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
     input_data = np.expand_dims(np.array(img_rgb, dtype=np.float32), axis=0).transpose((0, 3, 1, 2))
     output = list(sess.run(None, {yolo_input_name: input_data}))
     bounds = get_bounds_yolo(output)
     if shape[3]!=640:
-        img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_rgb = cv2.cvtColor(image_640, cv2.COLOR_BGR2RGB)
     image = mask_image_opencv(img_rgb, bounds)
 
     return image, bounds
