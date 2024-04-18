@@ -56,6 +56,12 @@ models_configs = {
         'session_name' : 'onnxrt' ,
         'meta_arch_type' : 6
     },
+    'east-mobilenet-simplified-no-norm' : {
+        'model_path' : os.path.join(models_base_path, 'east_mv2_simplified_no_norm.onnx'),
+        'session_name' : 'onnxrt' ,
+        'num_images': numImages,
+        'model_type': ""
+    },
     'fcnn' : {
         'model_path' : os.path.join(models_base_path, 'fcn_v2.onnx'),
         'session_name' : 'onnxrt' ,
